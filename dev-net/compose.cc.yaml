@@ -1,0 +1,16 @@
+version: '2'
+
+networks:
+  openplatform:
+
+services:
+  eventstore-cc:
+    image: fabric-es/eventstore-cc
+    container_name: eventstore-cc
+    environment:
+      - CHAINCODE_ADDRESS="0.0.0.0:7052"
+      - CHAINCODE_CCID
+    ports:
+      - 7052:7052
+    networks:
+      - openplatform

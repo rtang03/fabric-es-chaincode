@@ -202,19 +202,25 @@ done
 printf "\n###################"
 printf "\n# BUILD CHAINCODE #"
 printf "\n###################\n"
-cd $CHAINCODE && yarn build
-printMessage "Build chaincode" $?
+set -x
+cp $CONFIG/connection.json $ARTIFACTS
+res=$?
+set +x
+printMessage "copy connection.json" $res
 
-printf "\n#######################"
-printf "\n# PACKAGE CC ON $FIRST_NAME #"
-printf "\n#######################\n"
-docker exec \
-  cli peer lifecycle chaincode package eventstore.tar.gz \
-    --path /opt/gopath/src/github.com/hyperledger/fabric/chaincode \
-    --lang node \
-    --label eventstorev1
-printMessage "Package chaincode eventstore.tar.gz" $?
+set -x
+cp $CONFIG/metadata.json $ARTIFACTS
+res=$?
+set +x
+printMessage "copy metadata.json" $res
 
+set -x
+cd $ARTIFACTS && tar cfz code.tar.gz connection.json && tar cfz eventstore.tgz code.tar.gz metadata.json
+res=$?
+set +x
+printMessage "tar package" $res
+
+cd $CURRENT_DIR
 sleep 1
 
 for ORG in $ORGLIST
@@ -230,7 +236,7 @@ do
     -e CORE_PEER_LOCALMSPID=${NAME}MSP \
     -e CORE_PEER_TLS_ROOTCERT_FILE=/var/artifacts/crypto-config/${NAME}MSP/${PEER}.${DOMAIN}/tls-msp/tlscacerts/tls-0-0-0-0-5052.pem \
     -e CORE_PEER_MSPCONFIGPATH=/var/artifacts/crypto-config/${NAME}MSP/admin/msp \
-    cli peer lifecycle chaincode install eventstore.tar.gz
+    cli peer lifecycle chaincode install /var/artifacts/eventstore.tgz
   printMessage "Install chaincode: eventstore for $ORG" $?
   sleep 1
 done
@@ -246,14 +252,21 @@ do
     cli peer"
 
   echo "Determining package ID"
-  REGEX='Package ID: (.*), Label: eventstorev1'
+  REGEX='Package ID: (.*), Label: eventstore'
   if [[ `${PEER_ORG} lifecycle chaincode queryinstalled` =~ $REGEX ]]; then
-    PACKAGE_ID=${BASH_REMATCH[1]}
+    export CHAINCODE_CCID=${BASH_REMATCH[1]}
   else
     echo "Could not find package ID"
-    exit 1
+    printMessage "retrieve CHAINCODE_CCID" 1
   fi
-  printMessage "query packageId ${PACKAGE_ID}" $?
+  printMessage "query packageId ${CHAINCODE_CCID}" $?
+
+  printf "\n############################"
+  printf "\n# DEPLOY CHAINCODE CONTAINER - $NAME #"
+  printf "\n############################\n"
+  docker-compose $1 -f compose.cc.yaml up -d
+
+  sleep 60
 
   printf "\n############################"
   printf "\n# APPROVE CHAINCODE - $NAME #"
@@ -271,7 +284,7 @@ do
       --channelID loanapp \
       --name eventstore \
       --version 1.0 \
-      --package-id ${PACKAGE_ID} \
+      --package-id ${CHAINCODE_CCID} \
       --init-required \
       --signature-policy "AND(${MEMBERS})" \
       --sequence 1 \

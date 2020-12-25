@@ -179,6 +179,7 @@ services:
       - $ARTIFACTS:/var/artifacts
       - $SCRIPTS:/setup
       - $CONFIG:/config
+      - ./core.yaml:/etc/hyperledger/fabric/core.yaml
       - $CHAINCODE:/opt/gopath/src/github.com/hyperledger/fabric/chaincode
 
   # ORG1
@@ -225,6 +226,8 @@ services:
     volumes:
       - /var/run:/host/var/run
       - $ARTIFACTS:/var/artifacts
+      - $CONFIG/bin:/builders/external/bin
+      - ./core.yaml:/etc/hyperledger/fabric/core.yaml
     ports:
       - 7051:7051
       - 7053:7053

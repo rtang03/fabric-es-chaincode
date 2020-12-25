@@ -10,7 +10,8 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   NEEDSUDO=0
 fi
 
-COMPOSE=$COMPOSE_ALL
+#COMPOSE=$COMPOSE_ALL
+COMPOSE="$COMPOSE_1 -f compose.cc.yaml"
 CLEAN_CC_IMG=0
 case $# in
   0)

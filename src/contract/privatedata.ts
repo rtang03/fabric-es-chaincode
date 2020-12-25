@@ -2,7 +2,16 @@ import util from 'util';
 import { Context, Contract, Info, Returns, Transaction } from 'fabric-contract-api';
 import { ChaincodeStub } from 'fabric-shim';
 import { omit } from 'lodash';
-import { Commit, createInstance, isEventArray, makeKey, PrivateStateList, toRecord } from '../ledger-api';
+import {
+  BaseEvent,
+  Commit,
+  createInstance,
+  isCommit,
+  isEventArray,
+  makeKey,
+  PrivateStateList,
+  toRecord,
+} from '../ledger-api';
 
 class MyContext extends Context {
   stateList?: PrivateStateList;
@@ -18,20 +27,20 @@ class MyContext extends Context {
  */
 @Info({
   title: 'smart contract for privatedata',
-  description: 'smart contract for privatedata'
+  description: 'smart contract for privatedata',
 })
 export class PrivateData extends Contract {
   constructor(public context: MyContext = new Context()) {
     super('privatedata');
   }
 
-  createContext() {
+  createContext(): Context {
     return new MyContext();
   }
 
   @Transaction()
   @Returns('string')
-  async Init(context: MyContext) {
+  async Init(context: MyContext): Promise<string> {
     console.info('=========== START : Initialize PrivateData =========');
     console.info('============= END : Initialize PrivateData ===========');
     return 'Init Done';
@@ -47,7 +56,13 @@ export class PrivateData extends Contract {
    */
   @Transaction()
   @Returns('bytebuffer')
-  async createCommit(context: MyContext, entityName: string, id: string, version: string, commitId: string) {
+  async createCommit(
+    context: MyContext,
+    entityName: string,
+    id: string,
+    version: string,
+    commitId: string
+  ): Promise<Buffer> {
     if (!id || !version || !entityName || !commitId)
       throw new Error('createCommit: null argument: id, version, entityName, collection');
 
@@ -65,7 +80,7 @@ export class PrivateData extends Contract {
 
     if (!transientMap) throw new Error('Error getting transient map');
 
-    let events: unknown;
+    let events: BaseEvent[];
     let eventStr: string;
     let commit: Commit;
 
@@ -91,7 +106,7 @@ export class PrivateData extends Contract {
         entityName,
         mspId: context.stub.getCreator().mspid,
         events,
-        commitId
+        commitId,
       });
     } else throw new Error('transient data is not correctly formatted');
 
@@ -114,7 +129,7 @@ export class PrivateData extends Contract {
    * @param entityName entityName
    */
   @Transaction(false)
-  async queryByEntityName(context: MyContext, entityName: string) {
+  async queryByEntityName(context: MyContext, entityName: string): Promise<Buffer> {
     if (!entityName) throw new Error('queryPrivateDataByEntityName problem: null argument');
 
     const collection = `_implicit_org_${context.clientIdentity.getMSPID()}`;
@@ -131,14 +146,17 @@ export class PrivateData extends Contract {
    * @param id entityId or id
    */
   @Transaction(false)
-  async queryByEntityId(context: MyContext, entityName: string, id: string) {
+  async queryByEntityId(context: MyContext, entityName: string, id: string): Promise<Buffer> {
     if (!id || !entityName) throw new Error('queryPrivateDataByEntityId problem: null argument');
 
     const collection = `_implicit_org_${context.clientIdentity.getMSPID()}`;
 
     console.info(`Submitter: ${context.clientIdentity.getID()} - queryByEntityId`);
 
-    return await context.stateList.getQueryResult(collection, [JSON.stringify(entityName), JSON.stringify(id)]);
+    return await context.stateList.getQueryResult(collection, [
+      JSON.stringify(entityName),
+      JSON.stringify(id),
+    ]);
   }
 
   /**
@@ -149,7 +167,12 @@ export class PrivateData extends Contract {
    * @param commitId commitId
    */
   @Transaction(false)
-  async queryByEntityIdCommitId(context: MyContext, entityName: string, id: string, commitId: string) {
+  async queryByEntityIdCommitId(
+    context: MyContext,
+    entityName: string,
+    id: string,
+    commitId: string
+  ): Promise<Buffer> {
     if (!id || !entityName || !commitId) throw new Error('getPrivateData problem: null argument');
 
     console.info(`Submitter: ${context.clientIdentity.getID()} - queryByEntityIdCommitId`);
@@ -159,7 +182,7 @@ export class PrivateData extends Contract {
     const commit = await context.stateList.getState(collection, key);
     const result = {};
 
-    if (commit?.commitId) result[commit.commitId] = omit(commit, 'key');
+    if (isCommit(commit)) result[commit.commitId] = omit(commit, 'key');
 
     return Buffer.from(JSON.stringify(result));
   }
@@ -172,8 +195,14 @@ export class PrivateData extends Contract {
    * @param commitId commitId
    */
   @Transaction()
-  async deleteByEntityIdCommitId(context: MyContext, entityName: string, id: string, commitId: string) {
-    if (!id || !entityName || !commitId) throw new Error('deletePrivateDataByEntityIdCommitId problem: null argument');
+  async deleteByEntityIdCommitId(
+    context: MyContext,
+    entityName: string,
+    id: string,
+    commitId: string
+  ): Promise<Buffer> {
+    if (!id || !entityName || !commitId)
+      throw new Error('deletePrivateDataByEntityIdCommitId problem: null argument');
 
     console.info(`Submitter: ${context.clientIdentity.getID()} - deleteByEntityIdCommitId`);
 
@@ -193,7 +222,7 @@ export class PrivateData extends Contract {
       return Buffer.from(
         JSON.stringify({
           status: 'SUCCESS',
-          message: `Commit ${commit.commitId} is deleted`
+          message: `Commit ${commit.commitId} is deleted`,
         })
       );
     } else {

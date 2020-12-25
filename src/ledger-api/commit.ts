@@ -26,7 +26,7 @@ export class Commit<T extends BaseEvent = any> {
     version: number;
     entityId: string;
     mspId: string;
-    events: any;
+    events: BaseEvent[];
     hash?: string;
     isFirst?: boolean;
     isLast?: boolean;
