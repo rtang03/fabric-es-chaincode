@@ -11,7 +11,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 fi
 
 #COMPOSE=$COMPOSE_ALL
-COMPOSE="$COMPOSE_1 -f compose.cc.yaml"
+COMPOSE="$COMPOSE_2 -f compose.cc.org1.yaml -f compose.cc.org2.yaml"
 CLEAN_CC_IMG=0
 case $# in
   0)

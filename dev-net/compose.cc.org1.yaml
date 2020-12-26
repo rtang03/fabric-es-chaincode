@@ -4,9 +4,9 @@ networks:
   openplatform:
 
 services:
-  eventstore-cc:
+  eventstore-cc1:
     image: fabric-es/eventstore-cc
-    container_name: eventstore-cc
+    container_name: eventstore-cc1
     environment:
       - CHAINCODE_ADDRESS="0.0.0.0:7052"
       - CHAINCODE_CCID

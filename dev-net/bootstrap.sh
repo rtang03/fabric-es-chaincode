@@ -199,32 +199,31 @@ do
   printMessage "update ${NAME}Anchors.tx" $?
 done
 
-printf "\n###################"
-printf "\n# BUILD CHAINCODE #"
-printf "\n###################\n"
-set -x
-cp $CONFIG/connection.json $ARTIFACTS
-res=$?
-set +x
-printMessage "copy connection.json" $res
-
-set -x
-cp $CONFIG/metadata.json $ARTIFACTS
-res=$?
-set +x
-printMessage "copy metadata.json" $res
-
-set -x
-cd $ARTIFACTS && tar cfz code.tar.gz connection.json && tar cfz eventstore.tgz code.tar.gz metadata.json
-res=$?
-set +x
-printMessage "tar package" $res
-
-cd $CURRENT_DIR
-sleep 1
-
 for ORG in $ORGLIST
 do
+  printf "\n###################"
+  printf "\n# BUILD CHAINCODE #"
+  printf "\n###################\n"
+  set -x
+  cat $CONFIG/connection.${ORG}.json > $ARTIFACTS/connection.json
+  res=$?
+  set +x
+  printMessage "copy connection.json" $res
+
+  set -x
+  cp $CONFIG/metadata.json $ARTIFACTS
+  res=$?
+  set +x
+  printMessage "copy metadata.json" $res
+
+  set -x
+  cd $ARTIFACTS && tar cfz code.tar.gz connection.json && tar cfz eventstore.tgz code.tar.gz metadata.json
+  res=$?
+  set +x
+  printMessage "tar package" $res
+
+  cd $CURRENT_DIR && sleep 1
+
   getConfig $ORG
   printf "\n############################"
   printf "\n# INSTALL CHAINCODE - $NAME #"
@@ -264,9 +263,9 @@ do
   printf "\n############################"
   printf "\n# DEPLOY CHAINCODE CONTAINER - $NAME #"
   printf "\n############################\n"
-  docker-compose $1 -f compose.cc.yaml up -d
+  docker-compose $1 -f compose.cc.${ORG}.yaml up -d
 
-  sleep 60
+  sleep 10
 
   printf "\n############################"
   printf "\n# APPROVE CHAINCODE - $NAME #"
