@@ -205,7 +205,7 @@ do
   printf "\n# BUILD CHAINCODE #"
   printf "\n###################\n"
   set -x
-  sudo cat $CONFIG/connection.${ORG}.json > $ARTIFACTS/connection.json
+  cat $CONFIG/connection.${ORG}.json > $ARTIFACTS/connection.json
   res=$?
   set +x
   printMessage "copy connection.json" $res
