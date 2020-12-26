@@ -1,0 +1,70 @@
+name: Create Release
+on:
+  push:
+    tags:
+      - 'v*'
+    paths-ignore:
+      - '**.md'
+
+env:
+  IMAGE_NAME: eventstore-cc
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+            - name: Setup Node.js for use with action
+              env:
+                ACTIONS_ALLOW_UNSECURE_COMMANDS: true
+              uses: actions/setup-node@v2
+              with:
+                node-version: '12.16.1'
+                check-latest: true
+      - name: npm install workaround
+        run: |
+          # see https://github.com/rtang03/fabric-es/issues/142
+          curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.0/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+          nvm --version
+          nvm install v12.16.1
+          nvm use v12.16.1
+          npm install
+          nvm install v14.0.0
+          nvm use v14.0.0
+          npm rebuild grpc
+          # npm rebuild grpc --target=14.0.0 --target_platform=linux --target_arch=x64 --target_libc=glibc
+          nvm use v12.16.1
+      - name: lint chaincode
+        run: npm run lint
+      - name: tsc compile
+        run: npm run build
+      - name: build chaincode docker image
+        run: cd /home/runner/work/rtang03/fabric-es-chaincode/dev-net && ./dn-build.sh
+      - name: Log into GitHub Container Registry
+        run: echo "${{ secrets.CR_PAT }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Push image to GitHub Container Registry
+        run: |
+          IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
+          # Change all uppercase to lowercase
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          # Strip git ref prefix from version
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+          # Strip "v" prefix from tag name
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+          # Use Docker `latest` tag convention
+          [ "$VERSION" == "$default-branch" ] && VERSION=latest
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+          docker push $IMAGE_ID:$VERSION

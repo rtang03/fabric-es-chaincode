@@ -1,12 +1,12 @@
 {
-  "name": "@fabric-es/chaincode",
-  "version": "0.0.5",
+  "name": "fabric-es-chaincode",
+  "version": "0.0.1",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "description": "Event Store Chaincode for Hyperledger Fabric",
   "repository": {
     "type": "git",
-    "url": "git://github.com/fabric-es/fabric-es-chaincode.git"
+    "url": "git://github.com/rtang03/fabric-es-chaincode.git"
   },
   "keywords": [
     "hyperledger"
@@ -23,10 +23,11 @@
     "build:prod": "rimraf dist && tsc -p ./tsconfig.prod.json",
     "network-test": "jest network.test",
     "unit-test": "jest unit.test",
-    "unit-test:fab": "yarn unit-test && yarn network-test",
+    "unit-test:fab": "npm run unit-test && npm run network-test",
     "test:private": "jest private.integration.test",
     "test:lc": "jest lifecycle.unit.test",
-    "lint": "eslint --max-warnings 10 'src/**/*.{js,ts}'"
+    "lint": "eslint --max-warnings 10 'src/**/*.{js,ts}'",
+    "postversion": "git push && git push --tags"
   },
   "dependencies": {
     "fabric-contract-api": "2.2.1",
