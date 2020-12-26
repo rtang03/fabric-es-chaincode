@@ -50,7 +50,7 @@ jobs:
       - name: tsc compile
         run: npm run build
       - name: build chaincode docker image
-        run: cd /home/runner/work/rtang03/fabric-es-chaincode/dev-net && ./dn-build.sh
+        run: cd dev-net && ./dn-build.sh
       - name: Log into GitHub Container Registry
         run: echo "${{ secrets.CR_PAT }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
       - name: Push image to GitHub Container Registry
