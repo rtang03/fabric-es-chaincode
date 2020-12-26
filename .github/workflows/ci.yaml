@@ -55,10 +55,10 @@ jobs:
       - name: tsc compile
         run: npm run build
       - name: build chaincode docker image
-        run: cd /home/runner/work/rtang03/fabric-es-chaincode/dev-net && ./dn-build.sh
+        run: cd /home/runner/work/abric-es-chaincode/fabric-es-chaincode/dev-net && ./dn-build.sh
       - name: deploy base 2-org fabric v2.x network
-        run: cd /home/runner/work/rtang03/fabric-es-chaincode/dev-net && ./dn-run.2org.sh
+        run: cd /home/runner/work/abric-es-chaincode/fabric-es-chaincode/dev-net && ./dn-run.2org.sh
       - name: Run unit tests for chaincode
         run: sudo npm run unit-test:fab
       - name: clean-up
-        run: sudo rm -rf /home/runner/work/rtang03/fabric-es-chaincode/dev-net/artifacts
+        run: sudo rm -rf /home/runner/work/abric-es-chaincode/fabric-es-chaincode/dev-net/artifacts
