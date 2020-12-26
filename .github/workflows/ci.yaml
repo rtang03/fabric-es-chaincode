@@ -55,9 +55,9 @@ jobs:
       - name: tsc compile
         run: npm run build
       - name: build chaincode docker image
-        run: cd /home/runner/work/abric-es-chaincode/fabric-es-chaincode/dev-net && ./dn-build.sh
+        run: cd dev-net && ./dn-build.sh
       - name: deploy base 2-org fabric v2.x network
-        run: cd /home/runner/work/abric-es-chaincode/fabric-es-chaincode/dev-net && ./dn-run.2org.sh
+        run: cd dev-net && ./dn-run.2org.sh
       - name: Run unit tests for chaincode
         run: sudo npm run unit-test:fab
       - name: clean-up
