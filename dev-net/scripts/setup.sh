@@ -4,7 +4,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m'
 
-export RELEASE=0.7.1
+export RELEASE=0.0.5
 export IMAGE_TAG=2.2.0
 export CONFIG=./config
 export VOLUME=./volume
@@ -13,7 +13,7 @@ export SCRIPTS=./scripts
 export CRYPTO=/var/artifacts/crypto-config
 export CURRENT_DIR=`pwd`
 export AUTH_IMAGE=fabric-es/auth-server:${RELEASE}
-export TEST_IMAGE=fabric-es/tester:${RELEASE}
+export CC_IMAGE=fabric-es/eventstore-cc
 export PROXY_IMAGE=fabric-es/proxy:${RELEASE}
 export UI_CONTROL_IMAGE=fabric-es/ui-control
 export ROOT_DIR=$CURRENT_DIR/../..

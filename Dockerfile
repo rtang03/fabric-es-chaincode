@@ -9,7 +9,7 @@ ENV TIME_ZONE=Asia/Hong_Kong \
     NODE_CONFIG_ENV=production
 
 RUN mkdir /home/app/ \
-   && chown -R node:node /home/app/
+  && chown -R node:node /home/app/
 
 COPY --chown=node:node . /home/app/
 

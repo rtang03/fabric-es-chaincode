@@ -1,25 +1,33 @@
 import util from 'util';
 import { Context, Contract, Info, Returns, Transaction } from 'fabric-contract-api';
 import { omit } from 'lodash';
-import { Commit, createInstance, isEventArray, makeKey, toRecord } from '../ledger-api';
+import {
+  BaseEvent,
+  Commit,
+  createInstance,
+  isCommit,
+  isEventArray,
+  makeKey,
+  toRecord,
+} from '../ledger-api';
 import { MyContext } from './myContext';
 
 @Info({
   title: 'smart contract for eventstore',
-  description: 'smart contract for eventstore'
+  description: 'smart contract for eventstore',
 })
 export class EventStore extends Contract {
   constructor(public context: MyContext = new Context()) {
     super('eventstore');
   }
 
-  createContext() {
+  createContext(): Context {
     return new MyContext();
   }
 
   @Transaction()
   @Returns('string')
-  async Init(context: MyContext) {
+  async Init(context: MyContext): Promise<string> {
     console.info('=== START : Initialize eventstore ===');
 
     // const commits: Commit[] = [];
@@ -63,11 +71,11 @@ export class EventStore extends Contract {
     version: string,
     eventStr: string,
     commitId: string
-  ) {
+  ): Promise<Buffer> {
     if (!id || !entityName || !eventStr || !commitId || version === undefined)
       throw new Error('createCommit problem: null argument');
 
-    let events: unknown;
+    let events: BaseEvent[];
     let commit: Commit;
 
     try {
@@ -84,7 +92,7 @@ export class EventStore extends Contract {
         entityName,
         mspId: context.stub.getCreator().mspid,
         events,
-        commitId
+        commitId,
       });
     } else throw new Error('eventStr is not correctly formatted');
 
@@ -93,27 +101,32 @@ export class EventStore extends Contract {
     // lifeCycle == 0 - NORMAL event, no restriction
     // lifeCycle == 1 - BEGIN event, can only appear once at the begining of the event stream of an entity
     // lifeCycle == 2 - END event, can only appear once at the end of the event stream of an entity
-    const lcBgn = events.findIndex(item => item.lifeCycle && (item.lifeCycle === 1));
-    const lcEnd = events.findIndex(item => item.lifeCycle && (item.lifeCycle === 2));
-    if ((lcBgn >= 0) || (lcEnd >= 0)) {
-      if ((lcBgn >= 0) && (lcEnd >= 0) && (lcBgn >= lcEnd)) {
+    const lifecycleBegin = events.findIndex((item) => item.lifeCycle && item.lifeCycle === 1);
+    const lifecycleEnd = events.findIndex((item) => item.lifeCycle && item.lifeCycle === 2);
+    if (lifecycleBegin >= 0 || lifecycleEnd >= 0) {
+      if (lifecycleBegin >= 0 && lifecycleEnd >= 0 && lifecycleBegin >= lifecycleEnd) {
         // Both BEGIN and END events found in the stream, but in incorrect order (entity END before BEGIN)
         throw new Error(`Cannot end ${id} before starting`);
       }
 
-      const rslt: Buffer = await context.stateList.getQueryResult([JSON.stringify(entityName), JSON.stringify(id)]);
-      if (lcBgn >= 0) {
-        if (rslt && (rslt.toString('utf8').includes(`"id":"${id}"`))) {
+      const result:
+        | Record<string, Partial<Commit>>
+        | Buffer = await context.stateList.getQueryResult([
+        JSON.stringify(entityName),
+        JSON.stringify(id),
+      ]);
+      if (lifecycleBegin >= 0) {
+        if (result && result.toString('utf8').includes(`"id":"${id}"`)) {
           // Attempt to BEGIN an entity with the same {id}
           throw new Error(`Lifecycle of ${id} already started`);
         }
       }
 
-      if (lcEnd >= 0) {
-        if (!rslt || (!rslt.toString('utf8').includes(`"id":"${id}"`))) {
+      if (lifecycleEnd >= 0) {
+        if (!result || !result.toString('utf8').includes(`"id":"${id}"`)) {
           // Attempt to END an non-existing entity
           throw new Error(`Lifecycle of ${id} not started yet`);
-        } else if (rslt.toString('utf8').includes('"lifeCycle":2')) {
+        } else if (result.toString('utf8').includes('"lifeCycle":2')) {
           // Attempt to END an already ended entity
           throw new Error(`Lifecycle of ${id} already ended`);
         }
@@ -134,7 +147,10 @@ export class EventStore extends Contract {
   }
 
   @Transaction(false)
-  async queryByEntityName(context: MyContext, entityName: string) {
+  async queryByEntityName(
+    context: MyContext,
+    entityName: string
+  ): Promise<Buffer | Record<string, Partial<Commit>>> {
     if (!entityName) throw new Error('queryByEntityName problem: null argument');
 
     console.info(`Submitter: ${context.clientIdentity.getID()} - queryByEntityName`);
@@ -143,7 +159,11 @@ export class EventStore extends Contract {
   }
 
   @Transaction(false)
-  async queryByEntityId(context: MyContext, entityName: string, id: string) {
+  async queryByEntityId(
+    context: MyContext,
+    entityName: string,
+    id: string
+  ): Promise<Buffer | Record<string, Partial<Commit>>> {
     if (!id || !entityName) throw new Error('queryByEntityId problem: null argument');
 
     console.info(`Submitter: ${context.clientIdentity.getID()} - queryByEntityId`);
@@ -152,8 +172,14 @@ export class EventStore extends Contract {
   }
 
   @Transaction(false)
-  async queryByEntityIdCommitId(context: MyContext, entityName: string, id: string, commitId: string) {
-    if (!id || !entityName || !commitId) throw new Error('queryByEntityIdCommitId problem: null argument');
+  async queryByEntityIdCommitId(
+    context: MyContext,
+    entityName: string,
+    id: string,
+    commitId: string
+  ): Promise<Buffer> {
+    if (!id || !entityName || !commitId)
+      throw new Error('queryByEntityIdCommitId problem: null argument');
 
     console.info(`Submitter: ${context.clientIdentity.getID()} - queryByEntityIdCommitId`);
 
@@ -161,28 +187,39 @@ export class EventStore extends Contract {
     const commit = await context.stateList.getState(key);
     const result = {};
 
-    if (commit?.commitId) result[commit.commitId] = omit(commit, 'key');
+    if (isCommit(commit)) result[commit.commitId] = omit(commit, 'key');
 
     return Buffer.from(JSON.stringify(result));
   }
 
   @Transaction()
-  async deleteByEntityIdCommitId(context: MyContext, entityName: string, id: string, commitId: string) {
-    if (!id || !entityName || !commitId) throw new Error('deleteEntityByCommitId problem: null argument');
+  async deleteByEntityIdCommitId(
+    context: MyContext,
+    entityName: string,
+    id: string,
+    commitId: string
+  ): Promise<Buffer> {
+    if (!id || !entityName || !commitId)
+      throw new Error('deleteEntityByCommitId problem: null argument');
 
     console.info(`Submitter: ${context.clientIdentity.getID()} - deleteByEntityIdCommitId`);
 
     const key = makeKey([entityName, id, commitId]);
     const commit = await context.stateList.getState(key);
 
-    if (commit?.key) {
+    if (isCommit(commit)) {
       await context.stateList.deleteState(commit);
       return getSuccessMessage(`Commit ${commit.commitId} is deleted`);
     } else return getSuccessMessage('commitId does not exist');
+
+    // if (commit?.key) {
+    //   await context.stateList.deleteState(commit);
+    //   return getSuccessMessage(`Commit ${commit.commitId} is deleted`);
+    // } else return getSuccessMessage('commitId does not exist');
   }
 
   @Transaction()
-  async deleteByEntityId(context: MyContext, entityName: string, id: string) {
+  async deleteByEntityId(context: MyContext, entityName: string, id: string): Promise<Buffer> {
     if (!id || !entityName) throw new Error('deleteByEntityId problem: null argument');
 
     console.info(`Submitter: ${context.clientIdentity.getID()} - deleteByEntityId`);
@@ -191,18 +228,5 @@ export class EventStore extends Contract {
   }
 }
 
-const getErrorMessage = method =>
-  Buffer.from(
-    JSON.stringify({
-      status: 'ERROR',
-      message: `${method} fails`
-    })
-  );
-
-const getSuccessMessage = message =>
-  Buffer.from(
-    JSON.stringify({
-      status: 'SUCCESS',
-      message
-    })
-  );
+const getSuccessMessage: (message: string) => Buffer = (message) =>
+  Buffer.from(JSON.stringify({ status: 'SUCCESS', message }));

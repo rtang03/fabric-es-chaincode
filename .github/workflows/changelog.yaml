@@ -17,8 +17,7 @@ jobs:
         uses: charmixer/auto-changelog-action@v1.1
         with:
           token: ${{ secrets.CI_TOKEN }}
-          since_tag: v0.6.1
-          exclude_tags: "v0.5.13,v0.5.14"
+          since_tag: v0.0.1
       - name: Commit files
         env:
           CI_USER: ${{ secrets.CI_USER }}

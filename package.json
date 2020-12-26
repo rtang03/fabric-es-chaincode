@@ -1,34 +1,33 @@
 {
-  "name": "@fabric-es/chaincode",
-  "version": "0.0.5",
+  "name": "fabric-es-chaincode",
+  "version": "0.0.1",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "description": "Event Store Chaincode for Hyperledger Fabric",
   "repository": {
     "type": "git",
-    "url": "git://github.com/fabric-es/fabric-es-chaincode.git"
+    "url": "git://github.com/rtang03/fabric-es-chaincode.git"
   },
   "keywords": [
     "hyperledger"
   ],
   "author": "Ross Tang",
   "license": "BSD-3-Clause-Clear",
-  "homepage": "https://github.com/fabric-es/fabric-es-chaincode",
+  "homepage": "https://github.com/rtang03/fabric-es-chaincode",
   "bugs": {
-    "url": "https://github.com/fabric-es/fabric-es-chaincode/issues"
+    "url": "https://github.com/rtang03/fabric-es-chaincode/issues"
   },
   "scripts": {
     "start": "fabric-chaincode-node server --chaincode-address $CHAINCODE_ADDRESS --chaincode-id $CHAINCODE_CCID",
     "build": "rimraf dist && tsc",
     "build:prod": "rimraf dist && tsc -p ./tsconfig.prod.json",
-    "prepublishOnly": "npm run build",
     "network-test": "jest network.test",
     "unit-test": "jest unit.test",
-    "unit-test:fab": "yarn unit-test && yarn network-test",
+    "unit-test:fab": "npm run unit-test && npm run network-test",
     "test:private": "jest private.integration.test",
     "test:lc": "jest lifecycle.unit.test",
     "lint": "eslint --max-warnings 10 'src/**/*.{js,ts}'",
-    "publish:gh:fabric-es": "npm publish"
+    "postversion": "git push && git push --tags"
   },
   "dependencies": {
     "fabric-contract-api": "2.2.1",
@@ -46,7 +45,18 @@
     "prettier": "^2.2.1",
     "rimraf": "^3.0.2",
     "ts-jest": "^26.4.4",
-    "typescript": "^4.1.3"
+    "typescript": "4.0.5",
+    "@typescript-eslint/eslint-plugin": "^3.10.1",
+    "@typescript-eslint/eslint-plugin-tslint": "^3.10.1",
+    "@typescript-eslint/parser": "^3.10.1",
+    "eslint": "^7.16.0",
+    "eslint-config-prettier": "^7.1.0",
+    "eslint-config-standard": "^16.0.2",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-jest": "^24.1.3",
+    "eslint-plugin-prefer-arrow": "^1.2.2",
+    "eslint-plugin-prettier": "^3.3.0",
+    "tslint": "^6.1.3"
   },
   "prettier": {
     "eslintIntegration": true,

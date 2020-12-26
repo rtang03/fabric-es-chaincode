@@ -7,13 +7,16 @@ import { serialize, splitKey } from '.';
 export class StateList {
   constructor(public ctx: Context, public name: string) {}
 
-  async getQueryResult(attributes: string[], plainObject?: boolean) {
+  async getQueryResult(
+    attributes: string[],
+    plainObject?: boolean
+  ): Promise<Record<string, Partial<Commit>> | Buffer> {
     const promises = this.ctx.stub.getStateByPartialCompositeKey('entities', attributes);
-    const result: any = {};
+    const result: Record<string, Partial<Commit>> = {};
 
     try {
       for await (const res of promises) {
-        const commit = JSON.parse(res.value.toString());
+        const commit = JSON.parse(res.value.toString()) as Commit;
         result[commit.commitId] = omit(commit, 'key');
       }
     } catch (e) {
@@ -23,17 +26,22 @@ export class StateList {
     return plainObject ? result : Buffer.from(JSON.stringify(result));
   }
 
-  async addState(commit: Commit) {
-    await this.ctx.stub.putState(this.ctx.stub.createCompositeKey(this.name, splitKey(commit.key)), serialize(commit));
+  async addState(commit: Commit): Promise<void> {
+    await this.ctx.stub.putState(
+      this.ctx.stub.createCompositeKey(this.name, splitKey(commit.key)),
+      serialize(commit)
+    );
   }
 
-  async getState(key): Promise<Commit> {
-    let result;
+  async getState(key: string): Promise<Commit | Record<string, unknown>> {
+    let result: Commit | Record<string, unknown>;
 
-    const data = await this.ctx.stub.getState(this.ctx.stub.createCompositeKey(this.name, splitKey(key)));
+    const data = await this.ctx.stub.getState(
+      this.ctx.stub.createCompositeKey(this.name, splitKey(key))
+    );
 
     try {
-      result = data.toString() ? JSON.parse(data.toString()) : Object.assign({});
+      result = data.toString() ? (JSON.parse(data.toString()) as Commit) : {};
     } catch (e) {
       console.error(e);
       throw new Error(util.format('fail to parse data, %j', e));
@@ -42,17 +50,24 @@ export class StateList {
     return result;
   }
 
-  async deleteState(commit: Commit) {
-    await this.ctx.stub.deleteState(this.ctx.stub.createCompositeKey(this.name, splitKey(commit.key)));
+  async deleteState(commit: Commit): Promise<void> {
+    await this.ctx.stub.deleteState(
+      this.ctx.stub.createCompositeKey(this.name, splitKey(commit.key))
+    );
   }
 
-  async deleteStateByEnityId(attributes: string[]) {
+  async deleteStateByEnityId(attributes: string[]): Promise<Buffer> {
     const promises = this.ctx.stub.getStateByPartialCompositeKey('entities', attributes);
     const result = {};
     try {
       for await (const res of promises) {
-        const { key, commitId } = JSON.parse(res.value.toString());
-        await this.ctx.stub.deleteState(this.ctx.stub.createCompositeKey('entities', splitKey(key)));
+        const { key, commitId } = JSON.parse(res.value.toString()) as {
+          key: string;
+          commitId: string;
+        };
+        await this.ctx.stub.deleteState(
+          this.ctx.stub.createCompositeKey('entities', splitKey(key))
+        );
         result[commitId] = {};
       }
     } catch (e) {
@@ -60,13 +75,8 @@ export class StateList {
       throw new Error(util.format('fail to deleteStateByEnityId, %j', e));
     }
 
-    return Buffer.from(
-      JSON.stringify({
-        status: 'SUCCESS',
-        message: `${keys(result).length} record(s) deleted`,
-        result
-      })
-    );
-  }
+    const message = `${keys(result).length} record(s) deleted`;
 
+    return Buffer.from(JSON.stringify({ status: 'SUCCESS', message, result }));
+  }
 }
