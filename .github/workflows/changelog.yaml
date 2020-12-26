@@ -1,9 +1,5 @@
 name: Changelog
 on:
-  pull_request:
-    branches: [ main ]
-    types: [closed]
-
   release:
     types: [ published ]
 
