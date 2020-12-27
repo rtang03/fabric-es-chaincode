@@ -21,8 +21,6 @@ export ROOT_DIR=$CURRENT_DIR/../..
 export LOG_LEVEL=info
 export LOG_TARGET=console
 
-export CHAINCODE=$ROOT_DIR/packages/chaincode
-
 export LIBS_DIR=$ROOT_DIR/node_modules
 export CONF_DIR=$CURRENT_DIR/build.
 
