@@ -1,3 +1,7 @@
+![Create Release](https://github.com/rtang03/fabric-es-chaincode/workflows/Create%20Release/badge.svg)
+![CI](https://github.com/rtang03/fabric-es-chaincode/workflows/CI/badge.svg)
+![GitHub package.json version](https://img.shields.io/github/package-json/v/rtang03/fabric-es-chaincode)
+
 ### fabric-es-chaincode
 
 Create the docker image for Hyperledger Fabric v2.x external chaincode. This is currently 
