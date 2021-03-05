@@ -24,7 +24,6 @@
     "network-test": "jest network.test",
     "unit-test": "jest unit.test",
     "unit-test:fab": "npm run unit-test && npm run network-test",
-    "test:private": "jest private.integration.test",
     "test:lc": "jest lifecycle.unit.test",
     "lint": "eslint --max-warnings 10 'src/**/*.{js,ts}'",
     "postversion": "git push && git push --tags"

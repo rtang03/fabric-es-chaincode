@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #######################################
-# Build tester docker images
+# Build chaincode docker images
 #######################################
 
 if [[ ( $# -eq 1 ) && ( $1 = "-h" || $1 = "--help" ) ]]; then
@@ -18,9 +18,14 @@ SECONDS=0
 printf "Cleaning up old image $CC_IMAGE\n"
 docker rmi $CC_IMAGE
 
+### transpile ###
+cd $ROOT_DIR
+rm -fr ./dist
+$LIBS_DIR/.bin/tsc -p ./tsconfig.prod.json
+
 ### build image ###
 set -x
-cd .. && DOCKER_BUILD=1 docker build --no-cache -t $CC_IMAGE:$RELEASE .
+cd $ROOT_DIR && DOCKER_BUILD=1 docker build --no-cache -t $CC_IMAGE:$RELEASE .
 res=$?
 docker tag $CC_IMAGE:$RELEASE $CC_IMAGE
 set +x

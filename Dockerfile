@@ -18,7 +18,8 @@ RUN apk add --no-cache --virtual .build-deps tzdata \
   && echo "Asia/Hong_Kong" > /etc/timezone \
   && cd /home/app \
   && npm install --production  \
-  && apk del .build-deps
+  && apk del .build-deps \
+  && npm cache clean --force
 
 USER node
 

@@ -170,7 +170,7 @@ describe('Create commit with lifecycle starting and ending events', () => {
   it('should create commit', async () => {
     expect.assertions(1);
     return cc.createCommit(context, entityName, id, version, JSON.stringify(events), commitId)
-      .catch((error: Error) => expect(error.message).toBe(`Lifecycle of ${id} not started yet`)
+      .catch((error: Error) => expect(error.message).toBe(`Lifecycle of ${id} already started`)
     );
   });
 });

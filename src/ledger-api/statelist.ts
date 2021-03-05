@@ -26,6 +26,40 @@ export class StateList {
     return plainObject ? result : Buffer.from(JSON.stringify(result));
   }
 
+  // Return values:
+  //  0 - entity lifecycle not started
+  //  1 - entity lifecycle started
+  // -1 - entity lifecycle ended
+  // -2 - entity lifecycle ended without starting
+  async checkLifecycle(attributes: string[]): Promise<number> {
+    return new Promise<number>(async (resolve, reject) => {
+      const promises = this.ctx.stub.getStateByPartialCompositeKey('entities', attributes);
+      try {
+        let started = 0;
+        let ended = 0;
+        for await (const res of promises) {
+          const commit = omit(JSON.parse(res.value.toString()) as Commit, 'key');
+          started += commit.events.filter(e => e.lifeCycle && e.lifeCycle === 1).length;
+          ended += commit.events.filter(e => e.lifeCycle && e.lifeCycle === 2).length;
+        }
+
+        if (started > 0 && ended === 0) {
+          resolve(1);
+        } else if (started > 0 && ended > 0) {
+          resolve(-1);
+        } else if (started === 0 && ended > 0) {
+          console.log('Lifecycle ended without starting');
+          resolve(-2);
+        } else {
+          resolve(0);
+        }
+      } catch (e) {
+        console.error(e);
+        reject(e);
+      }
+    });
+  }
+
   async addState(commit: Commit): Promise<void> {
     await this.ctx.stub.putState(
       this.ctx.stub.createCompositeKey(this.name, splitKey(commit.key)),

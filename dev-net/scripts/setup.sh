@@ -16,7 +16,7 @@ export AUTH_IMAGE=fabric-es/auth-server:${RELEASE}
 export CC_IMAGE=fabric-es/eventstore-cc
 export PROXY_IMAGE=fabric-es/proxy:${RELEASE}
 export UI_CONTROL_IMAGE=fabric-es/ui-control
-export ROOT_DIR=$CURRENT_DIR/../..
+export ROOT_DIR=$CURRENT_DIR/..
 
 export LOG_LEVEL=info
 export LOG_TARGET=console

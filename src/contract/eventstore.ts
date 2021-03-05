@@ -109,26 +109,21 @@ export class EventStore extends Contract {
         throw new Error(`Cannot end ${id} before starting`);
       }
 
-      const result:
-        | Record<string, Partial<Commit>>
-        | Buffer = await context.stateList.getQueryResult([
-        JSON.stringify(entityName),
-        JSON.stringify(id),
-      ]);
+      const result = await context.stateList.checkLifecycle([JSON.stringify(entityName), JSON.stringify(id)]);
       if (lifecycleBegin >= 0) {
-        if (result && result.toString('utf8').includes(`"id":"${id}"`)) {
+        if (result !== 0) {
           // Attempt to BEGIN an entity with the same {id}
           throw new Error(`Lifecycle of ${id} already started`);
         }
       }
 
       if (lifecycleEnd >= 0) {
-        if (!result || !result.toString('utf8').includes(`"id":"${id}"`)) {
-          // Attempt to END an non-existing entity
-          throw new Error(`Lifecycle of ${id} not started yet`);
-        } else if (result.toString('utf8').includes('"lifeCycle":2')) {
+        if (result < 0) {
           // Attempt to END an already ended entity
           throw new Error(`Lifecycle of ${id} already ended`);
+        } else if (result === 0) {
+          // Attempt to END an non-existing entity
+          throw new Error(`Lifecycle of ${id} not started yet`);
         }
       }
     }
