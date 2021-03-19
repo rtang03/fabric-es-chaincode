@@ -21,16 +21,29 @@ export const createInstance: (option: {
   mspId: string;
   events: BaseEvent[];
   commitId: string;
+  signedRequest: string;
 }) => Commit = (option) =>
-  new Commit({
-    id: option.id,
-    entityName: option.entityName,
-    commitId: option.commitId,
-    version: parseInt(option.version, 10),
-    mspId: option.mspId,
-    events: option.events,
-    entityId: option.id,
-  });
+  option.signedRequest
+    ? new Commit({
+        id: option.id,
+        entityName: option.entityName,
+        commitId: option.commitId,
+        version: parseInt(option.version, 10),
+        mspId: option.mspId,
+        events: option.events,
+        entityId: option.id,
+        signedRequest: option.signedRequest,
+      })
+    : new Commit({
+        id: option.id,
+        entityName: option.entityName,
+        commitId: option.commitId,
+        version: parseInt(option.version, 10),
+        mspId: option.mspId,
+        events: option.events,
+        entityId: option.id,
+        signedRequest: '',
+      });
 
 // type guard for transient data
 export const isEventArray = (

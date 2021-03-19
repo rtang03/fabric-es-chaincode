@@ -75,14 +75,14 @@ describe('Chaincode Network Tests', () => {
     execa('docker', [
       ...base_args,
       ...invoke_args,
-      `{"Args":["eventstore:createCommit","${entityName}","id_00001","0","${eventStr}","${createCommitId()}"]}`
+      `{"Args":["eventstore:createCommit","${entityName}","id_00001","0","${eventStr}","${createCommitId()}",""]}`
     ]).then(({ stderr }) => expect(stderr).toContain('result: status:200')));
 
   it('should createCommit #2', async () =>
     execa('docker', [
       ...base_args,
       ...invoke_args,
-      `{"Args":["eventstore:createCommit","${entityName}","id_00001","0","${eventStr}","${createCommitId()}"]}`
+      `{"Args":["eventstore:createCommit","${entityName}","id_00001","0","${eventStr}","${createCommitId()}",""]}`
     ]).then(({ stderr }) => expect(stderr).toContain('result: status:200')));
 
   it('should queryByEntityId #2', async () =>
@@ -134,6 +134,6 @@ describe('Chaincode Network Tests', () => {
     execa('docker', [
       ...base_args,
       ...invoke_args,
-      `{"Args":["eventstore:createCommit","${entityName}","","0","${eventStr}","${createCommitId()}"]}`
+      `{"Args":["eventstore:createCommit","${entityName}","","0","${eventStr}","${createCommitId()}",""]}`
     ]).catch(({ stderr }) => expect(stderr).toContain('null argument')));
 });

@@ -107,6 +107,7 @@ export class PrivateData extends Contract {
         mspId: context.stub.getCreator().mspid,
         events,
         commitId,
+        signedRequest: '',
       });
     } else throw new Error('transient data is not correctly formatted');
 
