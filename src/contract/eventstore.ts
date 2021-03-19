@@ -71,7 +71,7 @@ export class EventStore extends Contract {
     version: string,
     eventStr: string,
     commitId: string,
-    signedRequest?: string
+    signedRequest: string
   ): Promise<Buffer> {
     if (!id || !entityName || !eventStr || !commitId || version === undefined)
       throw new Error('createCommit problem: null argument');

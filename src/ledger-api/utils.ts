@@ -21,7 +21,7 @@ export const createInstance: (option: {
   mspId: string;
   events: BaseEvent[];
   commitId: string;
-  signedRequest?: string;
+  signedRequest: string;
 }) => Commit = (option) =>
   option.signedRequest
     ? new Commit({
@@ -42,6 +42,7 @@ export const createInstance: (option: {
         mspId: option.mspId,
         events: option.events,
         entityId: option.id,
+        signedRequest: '',
       });
 
 // type guard for transient data

@@ -18,7 +18,7 @@ export class Commit<T extends BaseEvent = any> {
   hash?: string;
   isFirst?: boolean;
   isLast?: boolean;
-  signedRequest?: string;
+  signedRequest: string;
 
   constructor(option: {
     id: string;
@@ -31,7 +31,7 @@ export class Commit<T extends BaseEvent = any> {
     hash?: string;
     isFirst?: boolean;
     isLast?: boolean;
-    signedRequest?: string;
+    signedRequest: string;
   }) {
     this.key = makeKey([option.entityName, option.id, option.commitId]);
     this.id = option.id;

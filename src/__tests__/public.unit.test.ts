@@ -68,7 +68,7 @@ describe('Chaincode Tests', () => {
 
   it('should createCommit', async () =>
     cc
-      .createCommit(context, entityName, id, version, eventStr, commitId)
+      .createCommit(context, entityName, id, version, eventStr, commitId, '')
       .then<Commit>((response: any) => values(JSON.parse(response))[0])
       .then(({ id, entityName, version, entityId }) => ({
         id,
