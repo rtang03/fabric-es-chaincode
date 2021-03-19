@@ -70,7 +70,8 @@ export class EventStore extends Contract {
     id: string,
     version: string,
     eventStr: string,
-    commitId: string
+    commitId: string,
+    signedRequest?: string
   ): Promise<Buffer> {
     if (!id || !entityName || !eventStr || !commitId || version === undefined)
       throw new Error('createCommit problem: null argument');
@@ -93,6 +94,7 @@ export class EventStore extends Contract {
         mspId: context.stub.getCreator().mspid,
         events,
         commitId,
+        signedRequest,
       });
     } else throw new Error('eventStr is not correctly formatted');
 
@@ -109,7 +111,10 @@ export class EventStore extends Contract {
         throw new Error(`Cannot end ${id} before starting`);
       }
 
-      const result = await context.stateList.checkLifecycle([JSON.stringify(entityName), JSON.stringify(id)]);
+      const result = await context.stateList.checkLifecycle([
+        JSON.stringify(entityName),
+        JSON.stringify(id),
+      ]);
       if (lifecycleBegin >= 0) {
         if (result !== 0) {
           // Attempt to BEGIN an entity with the same {id}
