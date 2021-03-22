@@ -11,6 +11,7 @@ import {
   toRecord,
 } from '../ledger-api';
 import { MyContext } from './myContext';
+import DidJWT from 'did-jwt';
 
 @Info({
   title: 'smart contract for eventstore',
@@ -79,11 +80,19 @@ export class EventStore extends Contract {
     let events: BaseEvent[];
     let commit: Commit;
 
-    try {
-      events = JSON.parse(eventStr);
-    } catch (e) {
-      console.error(e);
-      throw new Error(util.format('fail to parse eventStr: %j', e));
+    if (signedRequest && signedRequest !== '') {
+      // (1) parse "signedRequest"
+      const decoded = DidJWT.decodeJWT(signedRequest);
+      events = decoded?.payload?.events;
+      if (!events) throw new Error('fail to parse events from signedRequest');
+    } else {
+      // (2) parse "events"
+      try {
+        events = JSON.parse(eventStr);
+      } catch (e) {
+        console.error(e);
+        throw new Error(util.format('fail to parse eventStr, %j', e));
+      }
     }
 
     if (isEventArray(events)) {
@@ -96,7 +105,7 @@ export class EventStore extends Contract {
         commitId,
         signedRequest,
       });
-    } else throw new Error('eventStr is not correctly formatted');
+    } else throw new Error('events is not correctly formatted');
 
     // ///////////////////////////////////////////////////////////////////
     // Add the concept 'lifeCycle' to BaseEvent (../ledger-api/commit.ts)
@@ -143,7 +152,7 @@ export class EventStore extends Contract {
 
     context.stub.setEvent('createCommit', Buffer.from(JSON.stringify(evt)));
 
-    return Buffer.from(JSON.stringify(toRecord(omit(commit, 'key', 'events'))));
+    return Buffer.from(JSON.stringify(toRecord(omit(commit, 'key', 'events', 'signedRequest'))));
   }
 
   @Transaction(false)

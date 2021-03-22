@@ -48,8 +48,8 @@ export const createInstance: (option: {
 // type guard for transient data
 export const isEventArray = (
   value: unknown
-): value is { type: string; lifeCycle?: number; payload?: any }[] =>
-  Array.isArray(value) && value.every((item: { type: string }) => typeof item.type === 'string');
+): value is { type: string; lifeCycle?: number; payload: any }[] =>
+  Array.isArray(value) && value.every((item: { type: string }) => typeof item?.type === 'string');
 
 export const isCommit = (
   value:

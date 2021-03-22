@@ -1,7 +1,8 @@
 name: Changelog
 on:
-  release:
-    types: [ published ]
+  pull_request:
+    branches: [ main ]
+    types: [ closed ]
 
 jobs:
   generate_changelog:
