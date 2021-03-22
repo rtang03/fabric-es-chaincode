@@ -7,7 +7,7 @@ on:
 jobs:
   generate_changelog:
     runs-on: ubuntu-latest
-    name: Generate changelog for master branch
+    name: Generate changelog
     steps:
       - uses: actions/checkout@v1
       - name: Generate changelog
@@ -16,6 +16,7 @@ jobs:
           token: ${{ secrets.CI_TOKEN }}
           since_tag: v0.0.3
           exclude_tags: "v0.0.1,v0.0.2"
+          release_branch: main
       - name: Commit files
         env:
           CI_USER: ${{ secrets.CI_USER }}
