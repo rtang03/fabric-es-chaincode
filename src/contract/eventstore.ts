@@ -1,4 +1,5 @@
 import util from 'util';
+import DidJWT from 'did-jwt';
 import { Context, Contract, Info, Returns, Transaction } from 'fabric-contract-api';
 import { omit } from 'lodash';
 import {
@@ -11,7 +12,6 @@ import {
   toRecord,
 } from '../ledger-api';
 import { MyContext } from './myContext';
-import DidJWT from 'did-jwt';
 
 @Info({
   title: 'smart contract for eventstore',
